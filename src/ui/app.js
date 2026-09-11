@@ -52,10 +52,11 @@ function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNo
 function saveNow() { clearTimeout(saveTimer); if (state.storageAvailable) saveStored(state.session); }
 window.addEventListener('pagehide', saveNow);
 
-let raf = 0;
+// 以計時器合併連續輸入；不用 requestAnimationFrame，因為背景分頁會暫停它而延遲重算。
+let computeTimer = 0;
 function scheduleCompute() {
-  if (raf) return;
-  raf = requestAnimationFrame(() => { raf = 0; recompute(); });
+  if (computeTimer) return;
+  computeTimer = setTimeout(() => { computeTimer = 0; recompute(); }, 16);
 }
 
 function recompute() {
