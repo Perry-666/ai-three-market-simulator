@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 三市場供需模擬器</title>
+  <meta name="description" content="調整外生因素、係數與方程式，即時求解硬體、算力、AI 服務三市場的均衡價格與數量，並比較基準與新情境。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f5bd3'/%3E%3Cpath d='M6 25 L26 7' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M6 7 L26 25' stroke='%23ffb37a' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/ui/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#charts">跳到均衡圖</a>
+
+  <header class="app-header">
+    <div class="brand">
+      <h1>AI 三市場供需模擬器</h1>
+      <p class="subtitle">硬體 × 算力 × AI 服務｜比較靜態教學原型｜示範數值為假設</p>
+    </div>
+    <fieldset class="mode">
+      <legend class="sr-only">求解模式</legend>
+      <label><input type="radio" name="mode" value="joint" checked> 三市場聯立均衡</label>
+      <label><input type="radio" name="mode" value="single"> 單市場觀察</label>
+    </fieldset>
+    <div class="toolbar" role="toolbar" aria-label="情境操作">
+      <button type="button" data-action="save-baseline" title="把目前情境設為比較基準">儲存為基準</button>
+      <button type="button" data-action="reset" title="目前情境回到基準">重設</button>
+      <button type="button" data-action="export">匯出 JSON</button>
+      <button type="button" data-action="import">匯入 JSON</button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <section id="single-controls" class="single-controls" hidden aria-label="單市場觀察設定">
+    <div class="single-row">
+      <label>觀察市場
+        <select id="single-market">
+          <option value="H">硬體市場</option>
+          <option value="C">算力市場</option>
+          <option value="A">AI 服務市場</option>
+        </select>
+      </label>
+      <fieldset class="fixed-from">
+        <legend>其他市場價格固定為</legend>
+        <label><input type="radio" name="fixedFrom" value="baseline" checked> 基準聯立均衡價格</label>
+        <label><input type="radio" name="fixedFrom" value="user"> 自訂輸入</label>
+      </fieldset>
+      <div class="fixed-prices" id="fixed-prices"></div>
+    </div>
+    <p class="single-note">其他市場價格固定：只求所選市場的條件交點，<strong>不是三市場整體均衡</strong>。</p>
+  </section>
+
+  <div id="notice" class="notice" role="alert" hidden></div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+
+  <main class="layout">
+    <aside class="panel" aria-label="輸入面板">
+      <div class="tabs" role="tablist" aria-label="面板">
+        <button type="button" role="tab" id="tab-factors" aria-controls="panel-factors" aria-selected="true">因素</button>
+        <button type="button" role="tab" id="tab-coefs" aria-controls="panel-coefs" aria-selected="false" tabindex="-1">係數</button>
+        <button type="button" role="tab" id="tab-scenarios" aria-controls="panel-scenarios" aria-selected="false" tabindex="-1">情境</button>
+      </div>
+      <div role="tabpanel" id="panel-factors" aria-labelledby="tab-factors"></div>
+      <div role="tabpanel" id="panel-coefs" aria-labelledby="tab-coefs" hidden></div>
+      <div role="tabpanel" id="panel-scenarios" aria-labelledby="tab-scenarios" hidden></div>
+    </aside>
+
+    <section class="results" aria-label="結果">
+      <div id="charts" class="charts" tabindex="-1"></div>
+      <div id="summary" class="summary"></div>
+
+      <details id="editor" class="editor">
+        <summary>方程式編輯器（進階）</summary>
+        <div id="editor-body"></div>
+      </details>
+
+      <section class="limits" aria-labelledby="limits-title">
+        <h2 id="limits-title">此版模型的解讀範圍</h2>
+        <ul>
+          <li><strong>教學原型：</strong>三市場價格傳導與比較靜態；係數尚未實證估計，示範值皆為假設。</li>
+          <li><strong>投入產出數量一致性尚未施加：</strong>算力需求近似式沒有強制 Q<sub>C</sub> 等於 a×Q<sub>A</sub> 加上訓練耗用。若要加入，需重新整合算力需求與模型生產關係，不是額外硬加第四條方程式。</li>
+          <li><strong>比較靜態：</strong>Q<sub>H</sub> 不自動加入 K<sub>C</sub>；未建立部署與退役的時間方程式，也不模擬未來十年。</li>
+          <li><strong>簡化設定：</strong>預設直接使用供需直線，不加容量、預算上限或 min／max 截斷；N、M、K<sub>C</sub>、W 只作移線因素。利率同時進入三個市場是投資與融資成本管道的簡化假設。</li>
+          <li><strong>示範校準：</strong>先選正價格與正數量的基準點，再反推截距使各式通過該點；這不是市場估計。求解器不讀這個點，而是獨立求得。</li>
+          <li><strong>適用範圍：</strong>求得負價格、負市場數量或負分群需求時標示「不在模型適用範圍」，不改寫成 0。</li>
+        </ul>
+        <p class="refs">參考數值：[1] FRED：SOFR，2026/09/09：3.64%／年。[2] EIA：電價，美國工業平均，2026/06：0.0917 美元／kWh。均非全球統一值。其餘因素在來源頁為「待填」。</p>
+      </section>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>變數與方程式修改只存在你的瀏覽器（本機儲存），不會改寫網站預設模型；跨裝置請用 JSON 匯出／匯入。</p>
+  </footer>
+</body>
+</html>
