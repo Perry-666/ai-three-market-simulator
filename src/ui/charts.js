@@ -137,9 +137,11 @@ function buildChart(m, shown, view, stale, onView) {
   const pCur = cur.P[mk.price];
   const qBase = base?.Q[m];
   const qCur = cur.Q[m];
-  const changeLine = (label, b, c) => {
-    if (!Number.isFinite(c)) return '';
-    if (!Number.isFinite(b)) return `<div><dt>${label}</dt><dd>${fmtNum(c)} <span class="delta">（基準不可用）</span></dd></div>`;
+  const changeLine = (label, b, cRaw) => {
+    if (!Number.isFinite(cRaw)) return '';
+    if (!Number.isFinite(b)) return `<div><dt>${label}</dt><dd>${fmtNum(cRaw)} <span class="delta">（基準不可用）</span></dd></div>`;
+    // 兩情境相同時求解尺度差異會留下 1e-11 等級雜訊；低於相對 1e-9 視為無變化
+    const c = Math.abs(cRaw - b) <= 1e-9 * Math.max(Math.abs(b), Math.abs(cRaw)) ? b : cRaw;
     return `<div><dt>${label}</dt><dd><span title="${esc(fmtFull(b))}">${fmtNum(b)}</span> → <span title="${esc(fmtFull(c))}">${fmtNum(c)}</span> <span class="delta">（${fmtDelta(c - b)}，${fmtPct(pctChange(b, c))}）</span></dd></div>`;
   };
   const otherIds = PRICE_IDS.filter((id) => id !== mk.price);
