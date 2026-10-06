@@ -21,6 +21,7 @@ export const FUNCTIONS = Object.freeze({
   min: { min: 2, max: Infinity, fn: Math.min, label: '最小值' },
   max: { min: 2, max: Infinity, fn: Math.max, label: '最大值' },
   pow: { min: 2, max: 2, fn: Math.pow, label: '次方' },
+  step: { min: 1, max: 1, fn: (x) => (x >= 0 ? 1 : 0), label: '階梯（x≥0 為 1，否則 0）' },
 });
 
 const CHAR_ALIASES = { '×': '*', '·': '*', '÷': '/', '−': '-', '（': '(', '）': ')', '，': ',' };

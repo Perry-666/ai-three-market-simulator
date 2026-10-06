@@ -7,7 +7,7 @@ import { MARKET_IDS, MARKETS } from '../src/engine/model.js';
 import { relClose } from './helpers.js';
 
 test('R05：各圖曲線在均衡價交於聯立結果；基準／新曲線各用自己的跨市場價格', () => {
-  const s = setValue(setValue(createDefaultSession(), 'r', 6), 'M', 70000);
+  const s = setValue(setValue(createDefaultSession(), 'r', 6), 'M', 24000);
   const r = computeSession(s);
   assert.equal(r.current.status, 'valid');
   for (const which of ['baseline', 'current']) {
@@ -26,7 +26,7 @@ test('R05：各圖曲線在均衡價交於聯立結果；基準／新曲線各�
 
 test('曲線取樣不裁切負值', () => {
   const r = computeSession(createDefaultSession());
-  const pts = sampleCurve(r.current.model, r.current.values, 'H', r.current.P, [0, 40000], 50);
+  const pts = sampleCurve(r.current.model, r.current.values, 'H', r.current.P, [0, 400000], 50);
   assert.equal(pts.length, 50);
   assert.ok(pts.some((p) => p.D < 0), '高價區需求為負仍保留原值（圖表只做視覺裁切）');
 });

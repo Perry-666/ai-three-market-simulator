@@ -1,61 +1,64 @@
 # 任務（Tasks）：AI 三市場供需模擬器
 
-對應：`spec.md`、`design.md`。每項任務標註需求與驗收條件；完成後勾選並記錄驗證方式。
+模型版本 2026-10-05。對應 `spec.md`、`design.md`；測試結果見 `../../docs/test-report.md`。
 
-## 階段 0：規格與設計
-- [x] T00 撰寫 spec.md（R01–R10、AC-01–AC-12）
-- [x] T01 撰寫 design.md（架構、演算法、JSON、部署）
-- [x] T02 撰寫 tasks.md（本文件）
+## 階段 A：依修訂後的來源重建模型（2026-10-06）
+- [x] A01 讀取 Notion 03／04／05／06／Appendix 與試算表四個分頁，確認 2026-10-05 修訂內容
+- [x] A02 model.js 改寫：41 個 Level 1、61 個 Level 2、22 條父層換算＋6 個中間量、具名係數、六條供需式、2027 基準均衡
+- [x] A03 parser.js 新增 `step()`（投資量產時間判斷）
+- [x] A04 scenario.js：輸入模式（direct／derived）、研究區間、JSON v2、驗證規則
+- [x] A05 session.js：編譯快取、換算模式下的符號解析、狀態轉換
+- [x] A06 sensitivity.js：端點敏感度、分開排名、區間掃描
+- [x] A07 移除舊版示範校準（calibrate.js）：新模型截距由 Notion 04 直接給定
 
-## 階段 1：運算引擎
-- [x] T10 parser.js：詞法、Pratt 語法、白名單函數、位置錯誤 — FR-3.4/3.5，AC-03
-- [x] T11 units.js：單位解析／格式化、AST 量綱檢查三態 — FR-3.6，AC-08
-- [x] T12 model.js：第 03 頁因素表、第 04 頁係數（單位＋用途）、05 §4 預設式、預期移線方向、示範值與來源標記 — FR-1、FR-2、FR-8，AC-07/08
-- [x] T13 compile.js：依賴圖、循環偵測、未知符號、除以零、非有限 — FR-3.5，AC-03
-- [x] T14 calibrate.js：示範校準反推截距 — FR-8.2
-- [x] T15 solver.js：線性判定、尺度化消去、秩判定、條件數、Newton、單市場、殘差、適用範圍 — FR-4，AC-04
-- [x] T16 analysis.js：曲線取樣、局部移線方向 — FR-5.4、FR-7.2，AC-05/11
-- [x] T17 scenario.js：輸入驗證、JSON 匯出匯入、比較與百分比 — FR-1.6、FR-6.4/6.5，AC-06/12
-- [x] T18 session.js：編輯公式／數值、重設、儲存基準、保留最後有效結果 — FR-3.5、FR-6，AC-02/03
+## 階段 B：測試（72 項全數通過）
+- [x] B01 model.test.js：R11 基準、R12 結構與跨市場係數推導、R07、R02、單調性、傳導方向
+- [x] B02 derivations.test.js：22 條換算重現父層基準、R14 不截回區間、R19 台積電投資時點、多父層更新
+- [x] B03 sensitivity.test.js：R13 分數、並列名次、R15 評分與例外、區間掃描
+- [x] B04 solver.test.js：閉式解交叉驗證、奇異／病態、負值不適用、非線性、單市場
+- [x] B05 scenario.test.js：R16 JSON 往返、缺值與舊版本拒絕、區間檢查、輸入驗證
+- [x] B06 session.test.js：公式與換算式編輯、錯誤保留最後有效結果、模式切換
+- [x] B07 parser／units／compile／charts-consistency 更新至新模型
 
-## 階段 2：測試（55 項全數通過，見 docs/test-report.md）
-- [x] T20 tests/parser.test.js
-- [x] T21 tests/units.test.js
-- [x] T22 tests/compile.test.js
-- [x] T23 tests/solver.test.js
-- [x] T24 tests/model.test.js
-- [x] T25 tests/scenario.test.js
-- [x] T26 tests/session.test.js
-- [x] T27 tests/charts-consistency.test.js
+## 階段 C：介面
+- [x] C01 因素面板：Player × 五大項、來源與資料可得性、研究區間、輸入方式切換
+- [x] C02 子變數面板：依父層分組，編輯時自動切換換算模式並提示
+- [x] C03 係數面板：推導／設定標示、單位與用途
+- [x] C04 敏感度分頁：龍捲風圖、排名表、旁註、21 點區間掃描、CSV 匯出
+- [x] C05 方程式編輯器：市場式與父層換算式分區，錯誤位置與預覽
+- [x] C06 結果表：推論／其他算力拆分、換算後的 Level 1、浮點雜訊歸零
+- [x] C07 模型範圍說明改寫；敏感度結果在輸入變更後自動失效
 
-## 階段 3：介面
-- [x] T30 index.html＋styles.css：版面、深淺色、響應式 — NFR-4/5，AC-09
-- [x] T31 panels.js：因素面板 — FR-1
-- [x] T32 panels.js：係數面板 — FR-2
-- [x] T33 editor.js：方程式編輯器 — FR-3
-- [x] T34 charts.js：三圖 — FR-5
-- [x] T35 app.js：模式切換、單市場固定價、狀態列、結果表、限制說明 — FR-4.2、FR-4.6
-- [x] T36 情境工具列與情境面板 — FR-6
-- [x] T37 教學提示 — FR-7
+## 階段 D：交付
+- [x] D01 spec／design／tasks 改版
+- [x] D02 README 與測試報告更新
+- [x] D03 commit 與部署到既有公開網址
+- [ ] D04 部署驗證（無痕視窗：載入、調整因素、敏感度、JSON 往返、兩個獨立工作階段）
 
-## 階段 4：驗證與交付
-- [x] T40 瀏覽器實測：桌面、手機尺寸、錯誤狀態、重新整理恢復、重設、單市場 — AC-02/03/06/09（紀錄於 test-report §2）
-- [x] T41 docs/test-report.md — R10
-- [x] T42 docs/deploy.md — R10
-- [x] T43 建立公開儲存庫、部署到 GitHub Pages（使用者已同意公開發佈） — R01、R10
-- [x] T44 部署驗證：正式網址 D1–D7 通過；D8 JSON 操作、D9 手機於正式網址未重測（見 test-report §3） — AC-01/06
+## 後續工作（Notion 06 §2.1、§9，本版未實作）
+- [ ] E01 R17：Level 2 → 父層 → 供需線 → 均衡差額的傳導視覺化
+- [ ] E02 R18：年度情境路徑（逐年求解、折線比較、跨期規則）
+- [ ] E03 R20：台積電生產資料 CSV 匯入、欄位對應預覽與校準介面
 
-## 需求追溯矩陣
+## 需求追溯
 
-| 需求 | 任務 | 測試／驗證 | 狀態 |
-|---|---|---|---|
-| R01 公開網站 | T43, T44 | D1–D6 | ✅ |
-| R02 因素與係數 | T12, T18, T31, T32 | T24, T26, B2, B5 | ✅ |
-| R03 編輯方程式 | T10, T13, T18, T33 | T20, T22, T26, B3, B6 | ✅ |
-| R04 求解 | T15 | T23, B7 | ✅ |
-| R05 比較圖 | T16, T34 | T27, B1 | ✅ |
-| R06 情境保存 | T17, T36 | T25, B4, D5, D7 | ✅（雙工作階段單向實測） |
-| R07 簡化模型 | T12 | T24 | ✅ |
-| R08 資料與公式一致 | T11, T12, T14, T33 | T21, T23 | ✅ |
-| R09 可用介面 | T30–T37 | B1, B8 | ✅ |
-| R10 完整交付 | T41–T44 | 交付清單 | ✅ |
+| 需求 | 實作 | 驗證 |
+|---|---|---|
+| R01 公開網站 | GitHub Pages | D04 |
+| R02 因素與係數 | panels.js、session.js | model.test、session.test |
+| R03 編輯方程式 | editor.js、compile.js | session.test |
+| R04 求解 | solver.js | solver.test |
+| R05 均衡圖 | charts.js | charts-consistency.test |
+| R06 情境保存 | scenario.js、storage.js | scenario.test、D04 |
+| R07 簡化模型 | model.js | model.test |
+| R08 資料與公式一致 | model.js、units.js | model.test、units.test |
+| R09 可用介面 | index.html、styles.css | 瀏覽器驗證 |
+| R10 完整交付 | specs／docs | 交付清單 |
+| R11 基準一致 | model.js | model.test |
+| R12 模型完整 | model.js | model.test |
+| R13 敏感度一致 | sensitivity.js | sensitivity.test |
+| R14 父層連接與固定規則 | scenario.js、session.js | derivations.test |
+| R15 評分與例外 | sensitivity.js | sensitivity.test |
+| R16 可重現 | scenario.js | scenario.test、solver.test |
+| R19 台積電生產連結 | model.js（DERIVATIONS） | derivations.test |
+| R17／R18／R20 | 後續工作 | — |

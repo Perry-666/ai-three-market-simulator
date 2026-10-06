@@ -17,6 +17,7 @@
   --err: #b42318;
   --err-soft: #fdeceb;
   --focus: #2f5bd3;
+  --low-bar: #9db4cc;
   --radius: 10px;
   --shadow: 0 1px 2px rgba(0, 0, 0, .05);
   color-scheme: light;
@@ -42,6 +43,7 @@
     --err: #ff8a80;
     --err-soft: #3d1c1a;
     --focus: #9db4ff;
+  --low-bar: #5a6b84;
     --shadow: none;
     color-scheme: dark;
   }
@@ -369,3 +371,69 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
   .single-controls { padding: 10px 14px; }
   .row-inputs { grid-template-columns: 1fr 104px; }
 }
+
+/* ---------- 2026-10-05 模型：Level 1／Level 2、敏感度 ---------- */
+
+h4.cat { font-size: 12px; color: var(--muted); margin: 12px 0 2px; font-weight: 600; }
+.group.pending ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.group.pending li { margin: 3px 0; }
+
+.mode-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.mode-row label { display: flex; align-items: center; gap: 4px; color: var(--text); }
+.derived-value { color: var(--accent); font-weight: 600; }
+
+.range-box { margin-top: 6px; font-size: 12.5px; }
+.range-box summary { cursor: pointer; color: var(--accent); }
+.range-box .kv { grid-template-columns: auto 1fr; margin-top: 4px; }
+.range-box .hint { font-size: 11.5px; color: var(--muted); margin: 4px 0 0; }
+
+.coef-group > summary .count {
+  float: right; font-size: 11px; color: var(--muted); background: var(--panel-2);
+  border-radius: 999px; padding: 0 7px; margin-left: 8px;
+}
+.badge.derived { color: var(--accent); background: var(--accent-soft); }
+.t-muted { color: var(--muted); }
+.warn-text { color: var(--warn); }
+
+/* 敏感度 */
+.sens { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow); }
+.sens-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; justify-content: space-between; }
+.sens-head h2 { font-size: 15px; }
+.sens-head .hint { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; max-width: 70ch; }
+.sens-actions { display: flex; gap: 6px; }
+.sens-status { font-size: 13px; margin: 10px 0; padding: 8px 10px; background: var(--panel-2); border-radius: 8px; }
+.sens-status code { font-size: 12px; }
+
+.level-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+.level-tabs [role="tab"] { border: 1px solid var(--line-strong); background: var(--panel); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.level-tabs [role="tab"][aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.show-all { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+
+.tornado { margin: 8px 0 14px; font-size: 12.5px; }
+.tornado-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 11.5px; padding: 0 0 4px; }
+.tornado-head span:nth-child(2) { flex: 0 0 auto; }
+.tornado-row { display: grid; grid-template-columns: minmax(130px, 220px) 1fr 72px; gap: 8px; align-items: center; padding: 2px 0; cursor: pointer; border-radius: 6px; }
+.tornado-row:hover { background: var(--panel-2); }
+.tornado-row.invalid { opacity: .5; }
+.t-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-track { position: relative; height: 15px; background: var(--panel-2); border-radius: 3px; }
+.t-zero { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line-strong); }
+.tbar { position: absolute; top: 2px; bottom: 2px; border-radius: 2px; }
+.tbar.low { background: var(--low-bar); }
+.tbar.high { background: var(--accent); }
+.t-score { text-align: right; font-variant-numeric: tabular-nums; }
+
+.sens-table { font-size: 12.5px; }
+.sens-table tr.cond td { color: var(--muted); font-size: 11.5px; padding-top: 0; border-bottom: 1px solid var(--line); }
+.sens-table tbody tr[data-id] { cursor: pointer; }
+.sens-table tbody tr[data-id]:hover { background: var(--panel-2); }
+
+.scan-box { margin: 12px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+.scan-box h3 { font-size: 13.5px; margin-bottom: 6px; }
+.scan-svg { width: 100%; max-width: 560px; height: auto; }
+.scan-svg .axis { stroke: var(--line-strong); }
+.scan-svg text { fill: var(--muted); font-size: 10px; }
+.scan-svg .curve { fill: none; stroke: var(--accent); stroke-width: 2; }
+.scan-svg .eq { fill: var(--accent); }
+
+.fx-group { font-size: 13.5px; margin: 14px 0 4px; }

@@ -15,7 +15,7 @@
   <header class="app-header">
     <div class="brand">
       <h1>AI 三市場供需模擬器</h1>
-      <p class="subtitle">硬體 × 算力 × AI 服務｜比較靜態教學原型｜示範數值為假設</p>
+      <p class="subtitle">硬體 × 算力 × AI 服務｜2027 單期研究情境｜核心產出：均衡算力 Q<sub>C</sub>＊｜數值為研究假設</p>
     </div>
     <fieldset class="mode">
       <legend class="sr-only">求解模式</legend>
@@ -57,10 +57,12 @@
     <aside class="panel" aria-label="輸入面板">
       <div class="tabs" role="tablist" aria-label="面板">
         <button type="button" role="tab" id="tab-factors" aria-controls="panel-factors" aria-selected="true">因素</button>
+        <button type="button" role="tab" id="tab-level2" aria-controls="panel-level2" aria-selected="false" tabindex="-1">子變數</button>
         <button type="button" role="tab" id="tab-coefs" aria-controls="panel-coefs" aria-selected="false" tabindex="-1">係數</button>
         <button type="button" role="tab" id="tab-scenarios" aria-controls="panel-scenarios" aria-selected="false" tabindex="-1">情境</button>
       </div>
       <div role="tabpanel" id="panel-factors" aria-labelledby="tab-factors"></div>
+      <div role="tabpanel" id="panel-level2" aria-labelledby="tab-level2" hidden></div>
       <div role="tabpanel" id="panel-coefs" aria-labelledby="tab-coefs" hidden></div>
       <div role="tabpanel" id="panel-scenarios" aria-labelledby="tab-scenarios" hidden></div>
     </aside>
@@ -69,22 +71,24 @@
       <div id="charts" class="charts" tabindex="-1"></div>
       <div id="summary" class="summary"></div>
 
+      <section id="sensitivity" class="sens" aria-label="單因素敏感度"></section>
+
       <details id="editor" class="editor">
         <summary>方程式編輯器（進階）</summary>
         <div id="editor-body"></div>
       </details>
 
       <section class="limits" aria-labelledby="limits-title">
-        <h2 id="limits-title">此版模型的解讀範圍</h2>
+        <h2 id="limits-title">模型範圍與解讀方式</h2>
         <ul>
-          <li><strong>教學原型：</strong>三市場價格傳導與比較靜態；係數尚未實證估計，示範值皆為假設。</li>
-          <li><strong>投入產出數量一致性尚未施加：</strong>算力需求近似式沒有強制 Q<sub>C</sub> 等於 a×Q<sub>A</sub> 加上訓練耗用。若要加入，需重新整合算力需求與模型生產關係，不是額外硬加第四條方程式。</li>
-          <li><strong>比較靜態：</strong>Q<sub>H</sub> 不自動加入 K<sub>C</sub>；未建立部署與退役的時間方程式，也不模擬未來十年。</li>
-          <li><strong>簡化設定：</strong>預設直接使用供需直線，不加容量、預算上限或 min／max 截斷；N、M、K<sub>C</sub>、W 只作移線因素。利率同時進入三個市場是投資與融資成本管道的簡化假設。</li>
-          <li><strong>示範校準：</strong>先選正價格與正數量的基準點，再反推截距使各式通過該點；這不是市場估計。求解器不讀這個點，而是獨立求得。</li>
-          <li><strong>適用範圍：</strong>求得負價格、負市場數量或負分群需求時標示「不在模型適用範圍」，不改寫成 0。</li>
+          <li><strong>研究情境，非預測：</strong>2027 單期比較靜態。除少數公開參照值（利率、電價、PUE）外，因素區間與係數都是研究者設定的情境假設，尚未由公司或市場資料估計。</li>
+          <li><strong>核心產出：</strong>年度實際供應並使用的有效算力 Q<sub>C</sub>＊（PFLOP-hour／年）。硬體出貨、晶圓與封裝需求屬於由均衡結果向上游換算的延伸，不是模型起點。</li>
+          <li><strong>兩層因素：</strong>41 個 Level 1 直接進入供需式；61 個 Level 2 先更新父層再求均衡。父層換算出的值不截回父層區間；同一子項影響多個父層時全部更新。</li>
+          <li><strong>敏感度分數：</strong>只改一個因素到區間端點，其餘輸入與係數固定基準；分數＝max(|δ下|,|δ上|)。它同時反映區間寬度與模型反應係數，不是因果效果、機率或變異數占比，不同因素不相加。</li>
+          <li><strong>簡化設定：</strong>供需為線性近似，資源條件只移動曲線，沒有容量、預算上限或 min／max 截斷。求得負價格、負數量或負分群需求時標為不適用，不改寫成 0。</li>
+          <li><strong>台積電渠道：</strong>生產資料先換成合格產出與交付能力 N，再移動硬體供給；投資只在 2027 年前量產才計入。直接給定 N、直接給定產能、由 CapEx 推算三種模式不重複疊加。</li>
         </ul>
-        <p class="refs">參考數值：[1] FRED：SOFR，2026/09/09：3.64%／年。[2] EIA：電價，美國工業平均，2026/06：0.0917 美元／kWh。均非全球統一值。其餘因素在來源頁為「待填」。</p>
+        <p class="refs">資料來源與完整因素表：Notion 01–06 與 Appendix、Google 試算表「均衡算力研究｜四個 Player 變數盤點與三項排名」。模型版本 2026-10-05。</p>
       </section>
     </section>
   </main>

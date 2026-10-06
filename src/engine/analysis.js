@@ -1,7 +1,15 @@
 // 曲線取樣與局部移線分析（固定跨市場價格，數值差分）。
 
 import { FormulaError } from './parser.js';
-import { EQUATIONS, MARKETS } from './model.js';
+import { MARKETS } from './model.js';
+
+/** 六條市場曲線：教學提示與局部移線方向用。 */
+export const EQUATIONS = {
+  H_S: 'Q_H_S', H_D: 'Q_H_D', C_S: 'Q_C_S', C_D: 'Q_C_D', A_S: 'Q_A_S', A_D: 'Q_A_D',
+};
+export const EQUATION_LABELS = {
+  H_S: '硬體供給', H_D: '硬體需求', C_S: '算力供給', C_D: '算力需求', A_S: 'AI 服務供給', A_D: 'AI 服務需求',
+};
 
 /**
  * 取樣本市場價格 P，計算 Q_S(P)、Q_D(P)。其他市場價格由 prices 提供。

@@ -1,75 +1,96 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createDefaultSession, exportSession, importSession, ImportError, pctChange, compareResults, validateInputs,
+  compareResults, createDefaultSession, exportSession, importSession, ImportError, pctChange, SCHEMA_VERSION,
+  validateInputs,
 } from '../src/engine/scenario.js';
-import { computeSession, setFormula, setValue } from '../src/engine/session.js';
+import { computeSession, setFormula, setMode, setValue } from '../src/engine/session.js';
+import { runSensitivity } from '../src/engine/sensitivity.js';
+import { DEFAULT_EXPR } from '../src/engine/model.js';
 
-test('JSON 匯出再匯入：公式、輸入、結果、來源標記皆重現', () => {
+test('R16：JSON 匯出再匯入，公式、父層關係、區間、模式與結果皆重現', () => {
   let s = createDefaultSession();
   s = setValue(s, 'r', 5.25);
-  s = setFormula(s, 'Q_H_D', 'A_H_D - d_H*P_H + k_HC*P_C - k_Hr_D*r - k_He*e - k_HL*L + k_HM*M + 1e6');
+  s = setMode(s, 'a', 'derived');
+  s = setValue(s, 'reasoning', 3);
+  s = setFormula(s, 'C_d', `${DEFAULT_EXPR.C_d} + 1000000`);
   const results = computeSession(s);
   const text = JSON.stringify(exportSession(s, results));
 
   const { session: back, expected } = importSession(text);
   assert.deepEqual(back.current.formulas, s.current.formulas);
+  assert.deepEqual(back.current.derivations, s.current.derivations);
   assert.deepEqual(back.current.values, s.current.values);
-  assert.deepEqual(back.baseline.values, s.baseline.values);
-  assert.deepEqual(back.solver, s.solver);
+  assert.deepEqual(back.current.ranges, s.current.ranges);
+  assert.deepEqual(back.current.modes, s.current.modes);
+  assert.equal(back.current.modes.a, 'derived');
   assert.equal(back.current.values.r.source, 'user');
   assert.equal(back.current.values.e.source, 'observed');
-  assert.equal(back.current.values.A_H_S.source, 'calibrated');
-  assert.equal(back.current.values.b_H.source, 'assumption');
 
   const again = computeSession(back);
   assert.deepEqual(compareResults(expected, again), []);
-  assert.equal(again.current.P.P_H, results.current.P.P_H);
+  assert.equal(again.current.P.P_C, results.current.P.P_C);
 });
 
-test('匯出檔包含單位與求解設定', () => {
+test('匯出檔包含方法識別、單位、敏感度結果與父層換算', () => {
   const s = createDefaultSession();
-  const out = exportSession(s, computeSession(s));
-  assert.equal(out.current.values.r.unit, 'pct/yr');
-  assert.equal(out.current.formulas.find((f) => f.id === 'Q_C_S').unit, 'PFLOPS*h/yr');
-  assert.equal(out.solver.tolLinear, 1e-9);
-  assert.equal(out.results.current.status, 'valid');
+  const results = computeSession(s);
+  const sens = runSensitivity(s.current, s.solver);
+  const out = exportSession(s, results, sens);
+  assert.equal(out.version, SCHEMA_VERSION);
+  assert.equal(out.method, 'oat_baseline_pct_max_abs');
+  assert.equal(out.sensitivity.Q0, 8000000000);
+  assert.equal(out.sensitivity.level1.length, 41);
+  assert.equal(out.sensitivity.level2.length, 61);
+  assert.equal(out.sensitivity.level1[0].id, 'a');
+  assert.equal(out.current.values.r.unit, '%／年');
+  assert.equal(out.current.ranges.K_C.high, 1200000);
+  assert.ok(out.current.derivations.some((d) => d.id === 'N' && d.expr.includes('G_F')));
+  assert.equal(out.results.current.derivedLevel1.c, 200000);
 });
 
-test('匯入缺值（待填、null）時報錯，不補 0', () => {
+test('匯入缺值、無效來源、舊版本時報錯，不補 0', () => {
   const s = createDefaultSession();
   const obj = exportSession(s);
   obj.current.values.c.value = '待填';
-  obj.baseline.values.N.value = null;
   assert.throws(() => importSession(obj), (e) => {
     assert.ok(e instanceof ImportError);
     assert.ok(e.problems.some((p) => p.includes('「c」') && p.includes('不會自動補 0')));
-    assert.ok(e.problems.some((p) => p.includes('「N」')));
     return true;
   });
+  const old = exportSession(createDefaultSession());
+  old.version = 1;
+  assert.throws(() => importSession(old), /模型不相容/);
+  const badSource = exportSession(createDefaultSession());
+  badSource.current.values.r.source = 'measured';
+  assert.throws(() => importSession(badSource), /來源標記/);
+  assert.throws(() => importSession('{not json'), ImportError);
 });
 
-test('匯入錯誤 schema、無效來源標記', () => {
+test('匯入檢查區間：下限不得大於上限', () => {
   const obj = exportSession(createDefaultSession());
-  assert.throws(() => importSession({ ...obj, schema: 'other' }), ImportError);
-  obj.current.values.r.source = 'measured';
-  assert.throws(() => importSession(obj), /來源標記/);
-  assert.throws(() => importSession('{not json'), ImportError);
+  obj.current.ranges.N = { low: 400000, high: 100000 };
+  assert.throws(() => importSession(obj), /下限大於上限/);
 });
 
 test('基準為 0 時百分比變化不適用', () => {
   assert.equal(pctChange(0, 5), null);
-  assert.equal(pctChange(0, 0), null);
   assert.equal(pctChange(2, 3), 50);
   assert.equal(pctChange(-2, -1), 50);
 });
 
-test('輸入驗證：h>0、u≥1、成功率 0–100、非負；利率可為負', () => {
+test('輸入驗證：h>0、u≥1、比例 0–100；利率與預期可為負', () => {
   const s = createDefaultSession();
-  const bad = setValue(setValue(setValue(setValue(s, 'h', 0), 'u', 0.9), 's_E', 120), 'N', -1).current;
+  const bad = setValue(setValue(setValue(setValue(s, 'h', 0), 'u', 0.9), 's_E', 120), 'eta_train', 0).current;
   const ids = validateInputs(bad).errors.map((e) => e.id).sort();
-  assert.deepEqual(ids, ['N', 'h', 's_E', 'u']);
+  assert.deepEqual(ids, ['eta_train', 'h', 's_E', 'u']);
   assert.equal(validateInputs(setValue(s, 'r', -1.5).current).errors.length, 0);
-  assert.equal(validateInputs(setValue(s, 'epsilon', 0).current).errors.length, 0);
-  assert.equal(validateInputs(setValue(s, 'b_H', -1).current).warnings[0].id, 'b_H');
+  assert.equal(validateInputs(setValue(s, 'g_Y', -2).current).errors.length, 0);
+  assert.equal(validateInputs(setValue(s, 'R_E', -100000).current).errors.length, 0);
+  // 換算模式下不檢查父層區間（子項可推出區間外的父層值）
+  const derived = setValue(setMode(s, 'v_E', 'derived'), 'tau_E', 1).current;
+  assert.equal(validateInputs(derived).errors.length, 0);
+  // 基準落在區間外 → 警告
+  const warn = validateInputs(setValue(s, 'N', 900000).current).warnings.map((w) => w.id);
+  assert.ok(warn.includes('N'));
 });
