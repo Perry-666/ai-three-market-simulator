@@ -412,7 +412,12 @@ h4.cat { font-size: 12px; color: var(--muted); margin: 12px 0 2px; font-weight: 
 .tornado { margin: 8px 0 14px; font-size: 12.5px; }
 .tornado-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 11.5px; padding: 0 0 4px; }
 .tornado-head span:nth-child(2) { flex: 0 0 auto; }
-.tornado-row { display: grid; grid-template-columns: minmax(130px, 220px) 1fr 72px; gap: 8px; align-items: center; padding: 2px 0; cursor: pointer; border-radius: 6px; }
+.tornado-row { display: grid; grid-template-columns: minmax(120px, 230px) minmax(140px, 1fr) 72px; gap: 8px; align-items: center; padding: 2px 0; cursor: pointer; border-radius: 6px; }
+@media (max-width: 760px) {
+  .tornado-row { grid-template-columns: 1fr 70px; grid-template-areas: "name name" "track score"; row-gap: 2px; padding: 4px 0; }
+  .t-name { grid-area: name; } .t-track { grid-area: track; } .t-score { grid-area: score; }
+  .tornado-head span:first-child { display: none; }
+}
 .tornado-row:hover { background: var(--panel-2); }
 .tornado-row.invalid { opacity: .5; }
 .t-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
